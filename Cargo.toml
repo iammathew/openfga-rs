@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "openfga_common",
+    "openfga_idl_parser",
+    "openfga_compiler"
+]

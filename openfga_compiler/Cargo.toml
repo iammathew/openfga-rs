@@ -1,0 +1,22 @@
+[package]
+name = "openfga_compiler"
+version = "0.1.0"
+edition = "2021"
+default-run = "openfgac"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ariadne = "0.1.5"
+chumsky = "0.8.0"
+openfga_common = { path = "../openfga_common"}
+openfga_idl_parser = { path = "../openfga_idl_parser"}
+serde_json = "1.0.86"
+
+[[bin]]
+name = "openfgac"
+path = "src/main.rs"
+
+[[bin]]
+name = "openfgac-json"
+path = "src/json/main.rs"
