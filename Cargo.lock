@@ -106,12 +106,12 @@ dependencies = [
  "ariadne",
  "chumsky",
  "openfga_common",
- "openfga_idl_parser",
+ "openfga_dsl_parser",
  "serde_json",
 ]
 
 [[package]]
-name = "openfga_idl_parser"
+name = "openfga_dsl_parser"
 version = "0.1.0"
 dependencies = [
  "chumsky",

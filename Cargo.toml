@@ -2,6 +2,6 @@
 
 members = [
     "openfga_common",
-    "openfga_idl_parser",
+    "openfga_dsl_parser",
     "openfga_compiler"
 ]

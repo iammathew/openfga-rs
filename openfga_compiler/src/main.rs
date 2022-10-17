@@ -2,7 +2,7 @@ use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 use chumsky::{prelude::*, stream::Stream};
 use openfga_common::json::AuthorizationModel as JsonAuthModel;
 use openfga_common::AuthorizationModel;
-use openfga_idl_parser::{better_parser, lexer};
+use openfga_dsl_parser::{better_parser, lexer};
 use std::{env, fs, path::Path};
 
 fn main() {
