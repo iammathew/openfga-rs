@@ -16,6 +16,8 @@ pub enum Token {
     Or,
     From,
     As,
+    But,
+    Not,
     Identifier(String),
 }
 
@@ -30,6 +32,8 @@ impl fmt::Display for Token {
             Token::Or => write!(f, "or"),
             Token::From => write!(f, "from"),
             Token::As => write!(f, "as"),
+            Token::But => write!(f, "but"),
+            Token::Not => write!(f, "not"),
             Token::Identifier(s) => write!(f, "{}", s),
         }
     }
@@ -46,6 +50,8 @@ pub fn lexer() -> impl Parser<char, Vec<Spanned<Token>>, Error = Simple<char>> {
             "or" => Token::Or,
             "from" => Token::From,
             "as" => Token::As,
+            "but" => Token::But,
+            "not" => Token::Not,
             _ => Token::Identifier(ident),
         })
         .labelled("token");
