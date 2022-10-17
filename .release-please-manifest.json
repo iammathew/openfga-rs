@@ -1,5 +1,5 @@
 {
   "openfga_common": "0.1.0",
-  "openfga_idl_parser": "0.1.0",
+  "openfga_dsl_parser": "0.1.0",
   "openfga_compiler": "0.1.0"
 }
