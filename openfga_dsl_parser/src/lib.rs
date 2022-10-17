@@ -76,10 +76,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
         .labelled("direct access");
 
     let computed_self_access = ident
-        .map(|relation| Access::Computed {
-            object: String::from(""),
-            relation,
-        })
+        .map(|relation| Access::SelfComputed { relation })
         .labelled("computed self access");
 
     let computed_relation_access = ident
@@ -93,14 +90,29 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
         computed_relation_access,
         computed_self_access,
     ))
-    .labelled("access");
+    .labelled("simple access");
 
-    let and_access = simple_access
+    let difference_access = simple_access
+        .separated_by(just(Token::But).then(just(Token::Not)))
+        .at_least(1)
+        .at_most(2)
+        .map(|accesses| {
+            accesses
+                .into_iter()
+                .reduce(|prev, current| Access::Difference {
+                    base: Box::new(prev),
+                    subtract: Box::new(current),
+                })
+                .unwrap()
+        })
+        .labelled("but not");
+
+    let and_access = difference_access
         .separated_by(just(Token::And))
         .map(|accesses| {
             accesses
                 .into_iter()
-                .reduce(|prev, current| Access::And(Box::new(current), Box::new(prev)))
+                .reduce(|prev, current| Access::And(Box::new(prev), Box::new(current)))
                 .unwrap()
         })
         .labelled("and");
@@ -110,7 +122,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
         .map(|accesses| {
             accesses
                 .into_iter()
-                .reduce(|prev, current| Access::Or(Box::new(current), Box::new(prev)))
+                .reduce(|prev, current| Access::Or(Box::new(prev), Box::new(current)))
                 .unwrap()
         })
         .labelled("or");

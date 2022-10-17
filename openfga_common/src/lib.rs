@@ -3,10 +3,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Access {
     Direct,
-    Computed { object: String, relation: String },
-    SelfComputed { relation: String },
+    Computed {
+        object: String,
+        relation: String,
+    },
+    SelfComputed {
+        relation: String,
+    },
     Or(Box<Access>, Box<Access>),
     And(Box<Access>, Box<Access>),
+    Difference {
+        base: Box<Access>,
+        subtract: Box<Access>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -74,6 +83,10 @@ pub mod json {
         Intersection {
             intersection: Usersets,
         },
+        Difference {
+            base: Box<RelationData>,
+            subtract: Box<RelationData>,
+        },
         TupleToUserset {
             #[serde(rename = "tupleToUserset")]
             tuple_to_userset: TupleToUserset,
@@ -121,6 +134,10 @@ pub mod json {
                     intersection: Usersets {
                         child: vec![(*access1).into(), (*access2).into()],
                     },
+                },
+                Access::Difference { base, subtract } => RelationData::Difference {
+                    base: Box::new((*base).into()),
+                    subtract: Box::new((*subtract).into()),
                 },
                 Access::SelfComputed { relation } => RelationData::ComputedUserset {
                     computed_userset: ObjectRelation {
