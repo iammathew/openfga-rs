@@ -19,5 +19,5 @@ type org
     define repo_writer as self
 type app
   relations
-    define app_manager as self or owner from owner
+    define app_manager as self or owner from owner and (a from a or b from b)
     define owner as self

@@ -44,7 +44,13 @@ impl fmt::Display for Token {
 }
 
 pub fn lexer() -> impl Parser<char, Vec<Spanned<Token>>, Error = Simple<char>> {
-    let token = text::ident()
+    let ctrl = one_of("()").map(|c| match c {
+        '(' => Token::OpenParenthesis,
+        ')' => Token::CloseParenthesis,
+        _ => panic!("IMPOSSIBLE!"),
+    });
+
+    let ident = text::ident()
         .map(|ident: String| match ident.as_str() {
             "type" => Token::Type,
             "relations" => Token::Relations,
@@ -67,6 +73,8 @@ pub fn lexer() -> impl Parser<char, Vec<Spanned<Token>>, Error = Simple<char>> {
         .padded()
         .labelled("comment");
 
+    let token = ctrl.or(ident);
+
     token
         .map_with_span(|tok, span| (tok, span))
         .padded_by(comment.repeated())
@@ -77,66 +85,75 @@ pub fn lexer() -> impl Parser<char, Vec<Spanned<Token>>, Error = Simple<char>> {
 
 pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> + Clone {
     let ident = select! { Token::Identifier(ident) => ident.clone() }.labelled("identifier");
-    let direct_access = just(Token::SelfRef)
-        .map(|_| Access::Direct)
-        .labelled("direct access");
 
-    let computed_self_access = ident
-        .map(|relation| Access::SelfComputed { relation })
-        .labelled("computed self access");
+    let access = recursive(|access| {
+        let parenthesis_access =
+            access.delimited_by(just(Token::OpenParenthesis), just(Token::CloseParenthesis));
 
-    let computed_relation_access = ident
-        .then_ignore(just(Token::From))
-        .then(ident)
-        .map(|(relation, object)| Access::Computed { object, relation })
-        .labelled("computed relation access");
+        let direct_access = just(Token::SelfRef)
+            .map(|_| Access::Direct)
+            .labelled("direct access");
 
-    let simple_access = choice((
-        direct_access,
-        computed_relation_access,
-        computed_self_access,
-    ))
-    .labelled("simple access");
+        let computed_self_access = ident
+            .map(|relation| Access::SelfComputed { relation })
+            .labelled("computed self access");
 
-    let difference_access = simple_access
-        .separated_by(just(Token::But).then(just(Token::Not)))
-        .at_least(1)
-        .at_most(2)
-        .map(|accesses| {
-            accesses
-                .into_iter()
-                .reduce(|prev, current| Access::Difference {
-                    base: Box::new(prev),
-                    subtract: Box::new(current),
-                })
-                .unwrap()
-        })
-        .labelled("but not");
+        let computed_relation_access = ident
+            .then_ignore(just(Token::From))
+            .then(ident)
+            .map(|(relation, object)| Access::Computed { object, relation })
+            .labelled("computed relation access");
 
-    let and_access = difference_access
-        .separated_by(just(Token::And))
-        .map(|mut accesses| {
-            if accesses.len() == 1 {
-                return accesses.pop().unwrap();
-            }
-            Access::Union { children: accesses }
-        })
-        .labelled("and");
+        let simple_access = choice((
+            direct_access,
+            parenthesis_access,
+            computed_relation_access,
+            computed_self_access,
+        ))
+        .labelled("simple access");
 
-    let or_access = and_access
-        .separated_by(just(Token::Or))
-        .map(|mut accesses| {
-            if accesses.len() == 1 {
-                return accesses.pop().unwrap();
-            }
-            Access::Union { children: accesses }
-        })
-        .labelled("or");
+        let difference_access = simple_access
+            .separated_by(just(Token::But).then(just(Token::Not)))
+            .at_least(1)
+            .at_most(2)
+            .map(|accesses| {
+                accesses
+                    .into_iter()
+                    .reduce(|prev, current| Access::Difference {
+                        base: Box::new(prev),
+                        subtract: Box::new(current),
+                    })
+                    .unwrap()
+            })
+            .labelled("but not");
+
+        let and_access = difference_access
+            .separated_by(just(Token::And))
+            .map(|mut accesses| {
+                if accesses.len() == 1 {
+                    return accesses.pop().unwrap();
+                }
+                Access::Intersection { children: accesses }
+            })
+            .labelled("and");
+
+        let or_access = and_access
+            .separated_by(just(Token::Or))
+            .map(|mut accesses| {
+                if accesses.len() == 1 {
+                    return accesses.pop().unwrap();
+                }
+                Access::Union { children: accesses }
+            })
+            .labelled("or");
+
+        return or_access;
+    });
 
     let relation = just(Token::Define)
         .ignore_then(ident)
         .then_ignore(just(Token::As))
-        .then(or_access)
+        .then(access)
         .map(|(name, access)| Relation {
             name: name,
             access: access,
