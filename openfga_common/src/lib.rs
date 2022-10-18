@@ -10,8 +10,12 @@ pub enum Access {
     SelfComputed {
         relation: String,
     },
-    Or(Box<Access>, Box<Access>),
-    And(Box<Access>, Box<Access>),
+    Union {
+        children: Vec<Access>,
+    },
+    Intersection {
+        children: Vec<Access>,
+    },
     Difference {
         base: Box<Access>,
         subtract: Box<Access>,
@@ -125,14 +129,14 @@ pub mod json {
                 Access::Direct => RelationData::Direct {
                     this: HashMap::new(),
                 },
-                Access::Or(access1, access2) => RelationData::Union {
+                Access::Union { children } => RelationData::Union {
                     union: Usersets {
-                        child: vec![(*access1).into(), (*access2).into()],
+                        child: children.into_iter().map(|a| a.into()).collect(),
                     },
                 },
-                Access::And(access1, access2) => RelationData::Intersection {
+                Access::Intersection { children } => RelationData::Intersection {
                     intersection: Usersets {
-                        child: vec![(*access1).into(), (*access2).into()],
+                        child: children.into_iter().map(|a| a.into()).collect(),
                     },
                 },
                 Access::Difference { base, subtract } => RelationData::Difference {

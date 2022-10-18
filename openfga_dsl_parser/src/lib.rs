@@ -109,21 +109,21 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
 
     let and_access = difference_access
         .separated_by(just(Token::And))
-        .map(|accesses| {
-            accesses
-                .into_iter()
-                .reduce(|prev, current| Access::And(Box::new(prev), Box::new(current)))
-                .unwrap()
+        .map(|mut accesses| {
+            if accesses.len() == 1 {
+                return accesses.pop().unwrap();
+            }
+            Access::Union { children: accesses }
         })
         .labelled("and");
 
     let or_access = and_access
         .separated_by(just(Token::Or))
-        .map(|accesses| {
-            accesses
-                .into_iter()
-                .reduce(|prev, current| Access::Or(Box::new(prev), Box::new(current)))
-                .unwrap()
+        .map(|mut accesses| {
+            if accesses.len() == 1 {
+                return accesses.pop().unwrap();
+            }
+            Access::Union { children: accesses }
         })
         .labelled("or");
 
