@@ -18,6 +18,8 @@ pub enum Token {
     As,
     But,
     Not,
+    OpenParenthesis,
+    CloseParenthesis,
     Identifier(String),
 }
 
@@ -34,6 +36,8 @@ impl fmt::Display for Token {
             Token::As => write!(f, "as"),
             Token::But => write!(f, "but"),
             Token::Not => write!(f, "not"),
+            Token::OpenParenthesis => write!(f, "("),
+            Token::CloseParenthesis => write!(f, ")"),
             Token::Identifier(s) => write!(f, "{}", s),
         }
     }
@@ -52,6 +56,8 @@ pub fn lexer() -> impl Parser<char, Vec<Spanned<Token>>, Error = Simple<char>> {
             "as" => Token::As,
             "but" => Token::But,
             "not" => Token::Not,
+            "(" => Token::OpenParenthesis,
+            ")" => Token::CloseParenthesis,
             _ => Token::Identifier(ident),
         })
         .labelled("token");
