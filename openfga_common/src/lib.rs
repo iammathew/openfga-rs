@@ -41,7 +41,7 @@ pub struct AuthorizationModel {
 
 pub mod json {
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     use crate::Access;
 
@@ -54,7 +54,7 @@ pub mod json {
     pub struct Type {
         #[serde(rename = "type")]
         pub type_name: String,
-        pub relations: HashMap<String, RelationData>,
+        pub relations: BTreeMap<String, RelationData>,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -79,7 +79,7 @@ pub mod json {
     #[serde(untagged)]
     pub enum RelationData {
         Direct {
-            this: HashMap<String, String>,
+            this: BTreeMap<String, String>,
         },
         Union {
             union: Usersets,
@@ -111,7 +111,7 @@ pub mod json {
 
     impl From<super::Type> for Type {
         fn from(type_in: super::Type) -> Self {
-            let relations: HashMap<String, RelationData> = type_in
+            let relations: BTreeMap<String, RelationData> = type_in
                 .relations
                 .into_iter()
                 .map(|relation| (relation.name, relation.access.into()))
@@ -127,7 +127,7 @@ pub mod json {
         fn from(access: Access) -> Self {
             match access {
                 Access::Direct => RelationData::Direct {
-                    this: HashMap::new(),
+                    this: BTreeMap::new(),
                 },
                 Access::Union { children } => RelationData::Union {
                     union: Usersets {
