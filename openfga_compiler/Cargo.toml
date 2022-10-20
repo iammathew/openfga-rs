@@ -9,8 +9,8 @@ default-run = "openfgac"
 [dependencies]
 ariadne = "0.1.5"
 chumsky = "0.8.0"
-openfga_common = { path = "../openfga_common"}
-openfga_dsl_parser = { path = "../openfga_dsl_parser"}
+openfga_common = { path = "../openfga_common" }
+openfga_dsl_parser = { path = "../openfga_dsl_parser" }
 serde_json = "1.0.86"
 
 [[bin]]

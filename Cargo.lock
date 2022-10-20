@@ -93,6 +93,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68783febc7782c6c5cb401fbda4de5a9898be1762314da0bb2c10ced61f18b0c"
 
 [[package]]
+name = "openfga_checker"
+version = "0.1.0"
+dependencies = [
+ "openfga_common",
+]
+
+[[package]]
 name = "openfga_common"
 version = "0.1.0"
 dependencies = [
