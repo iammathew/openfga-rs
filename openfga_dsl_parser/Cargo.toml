@@ -2,6 +2,8 @@
 name = "openfga_dsl_parser"
 version = "0.1.0"
 edition = "2021"
+description = "OpenFGA DSL parser, contains code to parse a model definition"
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
