@@ -1,5 +1,6 @@
-use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
+use ariadne::{sources, Color, Fmt, Label, Report, ReportKind, Source};
 use chumsky::{prelude::*, stream::Stream};
+use openfga_checker::check_model;
 use openfga_common::json::AuthorizationModel as JsonAuthModel;
 use openfga_common::AuthorizationModel;
 use openfga_dsl_parser::{better_parser, lexer};
@@ -17,11 +18,19 @@ fn main() {
     match types {
         Some(types) => {
             let model = AuthorizationModel { types };
-            let json_model: JsonAuthModel = model.into();
-            let json = serde_json::to_string_pretty(&json_model);
-            match json {
-                Ok(string) => println!("{}", string),
-                Err(err) => println!("{}", err),
+            let res = check_model(&model);
+            match res {
+                Ok(()) => {
+                    let json_model: JsonAuthModel = model.into();
+                    let json = serde_json::to_string_pretty(&json_model);
+                    match json {
+                        Ok(string) => println!("{}", string),
+                        Err(err) => println!("{}", err),
+                    }
+                }
+                Err(errors) => {
+                    println!("{:?}", errors);
+                }
             }
         }
         None => {
@@ -55,11 +64,11 @@ fn main() {
                     )
                 };
 
-                let report = Report::build(ReportKind::Error, (), e.span().start)
+                let report = Report::build(ReportKind::Error, path_string.clone(), e.span().start)
                     .with_code(3)
                     .with_message(msg)
                     .with_label(
-                        Label::new(e.span())
+                        Label::new((path_string.clone(), e.span()))
                             .with_message(match e.reason() {
                                 chumsky::error::SimpleReason::Custom(msg) => msg.clone(),
                                 _ => format!(
@@ -75,7 +84,7 @@ fn main() {
                 let report = match e.reason() {
                     chumsky::error::SimpleReason::Unclosed { span, delimiter } => report
                         .with_label(
-                            Label::new(span.clone())
+                            Label::new((path_string.clone(), span.clone()))
                                 .with_message(format!(
                                     "Unclosed delimiter {}",
                                     delimiter.fg(Color::Yellow)
@@ -86,7 +95,10 @@ fn main() {
                     chumsky::error::SimpleReason::Custom(_) => report,
                 };
 
-                report.finish().print(Source::from(&src)).unwrap();
+                report
+                    .finish()
+                    .print(sources(vec![(path_string.clone(), src.clone())]))
+                    .unwrap();
             });
         }
     }

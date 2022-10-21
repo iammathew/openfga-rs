@@ -112,6 +112,7 @@ version = "0.1.0"
 dependencies = [
  "ariadne",
  "chumsky",
+ "openfga_checker",
  "openfga_common",
  "openfga_dsl_parser",
  "serde_json",
