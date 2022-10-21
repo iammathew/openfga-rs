@@ -1,4 +1,4 @@
-use ariadne::{sources, Color, Fmt, Label, Report, ReportKind, Source};
+use ariadne::{sources, Color, Fmt, Label, Report, ReportKind};
 use chumsky::{prelude::*, stream::Stream};
 use openfga_checker::check_model;
 use openfga_common::json::AuthorizationModel as JsonAuthModel;
@@ -11,7 +11,7 @@ fn main() {
     let path = Path::new(&path_string);
     let src = fs::read_to_string(&path).expect("Failed to read file");
 
-    let (tokens, errors) = lexer().parse_recovery_verbose(src.trim());
+    let (tokens, _errors) = lexer().parse_recovery_verbose(src.trim());
     let len = src.chars().count();
     let (types, errs) = better_parser()
         .parse_recovery_verbose(Stream::from_iter(len..len + 1, tokens.unwrap().into_iter()));
