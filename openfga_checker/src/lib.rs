@@ -5,8 +5,8 @@ use openfga_common::{AuthorizationModel, Relation, Type};
 #[derive(Debug)]
 pub enum ModelError {
     DuplicateType { name: String },
-    DuplicateRelation { name: String, typeName: String },
-    UnknownRelation { name: String, typeName: String },
+    DuplicateRelation { name: String, type_name: String },
+    UnknownRelation { name: String, type_name: String },
 }
 
 pub fn check_model(model: &AuthorizationModel) -> Result<(), Vec<ModelError>> {
@@ -24,7 +24,7 @@ pub fn check_model(model: &AuthorizationModel) -> Result<(), Vec<ModelError>> {
             if relation_map.contains_key(&r.name) {
                 errors.push(ModelError::DuplicateRelation {
                     name: r.name.clone(),
-                    typeName: t.name.clone(),
+                    type_name: t.name.clone(),
                 });
             }
             relation_map.insert(r.name.clone(), r);
