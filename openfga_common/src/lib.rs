@@ -34,9 +34,27 @@ pub struct Type {
     pub relations: Vec<Relation>,
 }
 
+impl Type {
+    pub fn relation_exists(&self, relation_name: &str) -> bool {
+        self.relations.iter().any(|r| r.name == relation_name)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct AuthorizationModel {
     pub types: Vec<Type>,
+}
+
+impl AuthorizationModel {
+    pub fn type_exists(&self, type_name: &str) -> bool {
+        self.types.iter().any(|t| t.name == type_name)
+    }
+
+    pub fn type_relation_exists(&self, type_name: &str, relation_name: &str) -> bool {
+        self.types
+            .iter()
+            .any(|t| t.name == type_name && t.relation_exists(relation_name))
+    }
 }
 
 pub mod json {
