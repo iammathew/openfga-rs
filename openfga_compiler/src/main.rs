@@ -1,15 +1,27 @@
 use ariadne::{sources, Color, Fmt, Label, Report, ReportKind};
 use chumsky::{prelude::*, stream::Stream};
+use clap::Parser as CliParser;
 use openfga_checker::check_model;
 use openfga_common::json::AuthorizationModel as JsonAuthModel;
 use openfga_common::AuthorizationModel;
-use openfga_dsl_parser::{better_parser, lexer};
-use std::{env, fs, path::Path};
+use openfga_dsl_parser::{better_parser, lexer, Token};
+use std::{fs, path::PathBuf};
+
+#[derive(CliParser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// input path of dsl model file
+    input_file: PathBuf,
+
+    /// output path of compiled model
+    #[arg(short, long)]
+    output: PathBuf,
+}
 
 fn main() {
-    let path_string: String = env::args().nth(1).expect("Expected file argument");
-    let path = Path::new(&path_string);
-    let src = fs::read_to_string(&path).expect("Failed to read file");
+    let args = Args::parse();
+    let src = fs::read_to_string(&args.input_file).expect("Failed to read file");
+    let path_string = args.input_file.into_os_string().into_string().unwrap();
 
     let (tokens, _errors) = lexer().parse_recovery_verbose(src.trim());
     let len = src.chars().count();
@@ -24,7 +36,7 @@ fn main() {
                     let json_model: JsonAuthModel = model.into();
                     let json = serde_json::to_string_pretty(&json_model);
                     match json {
-                        Ok(string) => println!("{}", string),
+                        Ok(string) => fs::write(&args.output, string).expect("Write failed!"),
                         Err(err) => println!("{}", err),
                     }
                 }
@@ -35,34 +47,7 @@ fn main() {
         }
         None => {
             errs.into_iter().for_each(|e| {
-                let msg = if let chumsky::error::SimpleReason::Custom(msg) = e.reason() {
-                    msg.clone()
-                } else {
-                    format!(
-                        "{}{}, expected {}",
-                        if e.found().is_some() {
-                            "Unexpected token"
-                        } else {
-                            "Unexpected end of input"
-                        },
-                        if let Some(label) = e.label() {
-                            format!(" while parsing {}", label)
-                        } else {
-                            String::new()
-                        },
-                        if e.expected().len() == 0 {
-                            "something else".to_string()
-                        } else {
-                            e.expected()
-                                .map(|expected| match expected {
-                                    Some(expected) => expected.to_string(),
-                                    None => "end of input".to_string(),
-                                })
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        },
-                    )
-                };
+                let msg = get_error_message(&e);
 
                 let report = Report::build(ReportKind::Error, path_string.clone(), e.span().start)
                     .with_code(3)
@@ -102,4 +87,38 @@ fn main() {
             });
         }
     }
+}
+
+fn get_error_message(e: &Simple<Token>) -> String {
+    let msg = if let chumsky::error::SimpleReason::Custom(msg) = e.reason() {
+        msg.clone()
+    } else {
+        format!(
+            "{}{}, expected instead {}",
+            match e.found() {
+                Some(f) => format!("Found unexpected token {}", f.fg(Color::Blue).to_string()),
+                None => format!(
+                    "Found unexpected {}",
+                    String::from("end of input").fg(Color::Blue).to_string()
+                ),
+            },
+            if let Some(label) = e.label() {
+                format!(" while parsing {}", label.fg(Color::Green).to_string())
+            } else {
+                String::new()
+            },
+            if e.expected().len() == 0 {
+                "something else".to_string()
+            } else {
+                e.expected()
+                    .map(|expected| match expected {
+                        Some(expected) => expected.fg(Color::Blue).to_string(),
+                        None => "end of input".fg(Color::Blue).to_string(),
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            },
+        )
+    };
+    return msg;
 }
