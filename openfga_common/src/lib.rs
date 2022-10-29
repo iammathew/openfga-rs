@@ -39,21 +39,23 @@ pub enum Access {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Relation {
-    pub name: Identifier,
+    pub identifier: Identifier,
     pub access: Access,
     pub span: Option<Span>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Type {
-    pub name: Identifier,
+    pub identifier: Identifier,
     pub relations: Vec<Relation>,
     pub span: Option<Span>,
 }
 
 impl Type {
     pub fn relation_exists(&self, relation_name: &str) -> bool {
-        self.relations.iter().any(|r| r.name.name == relation_name)
+        self.relations
+            .iter()
+            .any(|r| r.identifier.name == relation_name)
     }
 }
 
@@ -64,13 +66,13 @@ pub struct AuthorizationModel {
 
 impl AuthorizationModel {
     pub fn type_exists(&self, type_name: &str) -> bool {
-        self.types.iter().any(|t| t.name.name == type_name)
+        self.types.iter().any(|t| t.identifier.name == type_name)
     }
 
     pub fn type_relation_exists(&self, type_name: &str, relation_name: &str) -> bool {
         self.types
             .iter()
-            .any(|t| t.name.name == type_name && t.relation_exists(relation_name))
+            .any(|t| t.identifier.name == type_name && t.relation_exists(relation_name))
     }
 }
 
@@ -149,10 +151,10 @@ pub mod json {
             let relations: BTreeMap<String, RelationData> = type_in
                 .relations
                 .into_iter()
-                .map(|relation| (relation.name.name, relation.access.into()))
+                .map(|relation| (relation.identifier.name, relation.access.into()))
                 .collect();
             Type {
-                type_name: type_in.name.name,
+                type_name: type_in.identifier.name,
                 relations,
             }
         }

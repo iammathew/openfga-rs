@@ -78,13 +78,13 @@ fn build_model_error_report(
         .with_code(201)
         .with_message(format!(
             "Type with name {} got defined twice",
-            type1.name.name.clone().fg(Color::Blue)
+            type1.identifier.name.clone().fg(Color::Blue)
         ))
         .with_label(
             Label::new((path_string.clone(), type1.span.unwrap().clone()))
                 .with_message(format!(
                     "Type with name {} first was defined here",
-                    type1.name.name.clone().fg(Color::Blue)
+                    type1.identifier.name.clone().fg(Color::Blue)
                 ))
                 .with_color(Color::Red),
         )
@@ -106,14 +106,14 @@ fn build_model_error_report(
         .with_code(202)
         .with_message(format!(
             "Relation {} got defined twice on type {}",
-            relation1.name.name.clone().fg(Color::Blue),
-            target_type.name.name.clone().fg(Color::Blue)
+            relation1.identifier.name.clone().fg(Color::Blue),
+            target_type.identifier.name.clone().fg(Color::Blue)
         ))
         .with_label(
             Label::new((path_string.clone(), relation1.span.unwrap().clone()))
                 .with_message(format!(
                     "Relation {} first was defined here",
-                    relation1.name.name.clone().fg(Color::Blue)
+                    relation1.identifier.name.clone().fg(Color::Blue)
                 ))
                 .with_color(Color::Red),
         )
@@ -126,7 +126,7 @@ fn build_model_error_report(
             Label::new((path_string.clone(), target_type.span.unwrap().clone()))
                 .with_message(format!(
                     "on type {}",
-                    target_type.name.name.clone().fg(Color::Blue)
+                    target_type.identifier.name.clone().fg(Color::Blue)
                 ))
                 .with_color(Color::Blue),
         )

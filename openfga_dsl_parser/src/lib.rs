@@ -176,7 +176,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
         .then_ignore(just(Token::As))
         .then(access)
         .map_with_span(|(name, access), span| Relation {
-            name: name,
+            identifier: name,
             access: access,
             span: Some(span),
         })
@@ -190,7 +190,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
         .ignore_then(ident)
         .then(relations)
         .map_with_span(|(ident, relations), span| Type {
-            name: ident,
+            identifier: ident,
             relations,
             span: Some(span),
         })

@@ -46,7 +46,7 @@ fn check_access(
             relation: relation_name,
             span: _,
         } => {
-            if relation_name == &relation.name {
+            if relation_name == &relation.identifier {
                 todo!("Add error for self referencing access rules")
             } else if !rtype.relation_exists(&relation_name.name) {
                 errors.push(ModelError::UnknownRelation {
@@ -65,26 +65,30 @@ pub fn check_model(model: &AuthorizationModel) -> Result<(), Vec<ModelError>> {
     let mut type_map: HashMap<String, &Type> = HashMap::new();
     model.types.iter().for_each(|t| {
         // Check for duplicate type
-        if type_map.contains_key(&t.name.name) {
+        if type_map.contains_key(&t.identifier.name) {
             errors.push(ModelError::DuplicateTypeName {
-                type1: type_map.get(&t.name.name).unwrap().clone().clone(),
+                type1: type_map.get(&t.identifier.name).unwrap().clone().clone(),
                 type2: t.clone(),
             })
         }
-        type_map.insert(t.name.name.clone(), t);
+        type_map.insert(t.identifier.name.clone(), t);
 
         // Check relations
         let mut relation_map: HashMap<String, &Relation> = HashMap::new();
         t.relations.iter().for_each(|r| {
             // Check for duplicate relation
-            if relation_map.contains_key(&r.name.name) {
+            if relation_map.contains_key(&r.identifier.name) {
                 errors.push(ModelError::DuplicateRelationName {
-                    relation1: relation_map.get(&r.name.name).unwrap().clone().clone(),
+                    relation1: relation_map
+                        .get(&r.identifier.name)
+                        .unwrap()
+                        .clone()
+                        .clone(),
                     relation2: r.clone(),
                     target_type: t.clone(),
                 });
             }
-            relation_map.insert(r.name.name.clone(), r);
+            relation_map.insert(r.identifier.name.clone(), r);
 
             // Check access errors
             check_access(&r.access, r, t, model, &mut errors);
