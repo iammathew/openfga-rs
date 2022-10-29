@@ -31,20 +31,20 @@ fn check_access(
         Access::Difference {
             base,
             subtract,
-            span,
+            span: _,
         } => {
             check_access(base, relation, rtype, model, errors);
             check_access(subtract, relation, rtype, model, errors);
         }
-        Access::Intersection { children, span } => children
+        Access::Intersection { children, span: _ } => children
             .iter()
             .for_each(|a| check_access(a, relation, rtype, model, errors)),
-        Access::Union { children, span } => children
+        Access::Union { children, span: _ } => children
             .iter()
             .for_each(|a| check_access(a, relation, rtype, model, errors)),
         Access::SelfComputed {
             relation: relation_name,
-            span,
+            span: _,
         } => {
             if relation_name == &relation.name {
                 todo!("Add error for self referencing access rules")

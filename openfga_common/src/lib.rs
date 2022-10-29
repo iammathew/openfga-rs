@@ -161,15 +161,15 @@ pub mod json {
     impl From<Access> for RelationData {
         fn from(access: Access) -> Self {
             match access {
-                Access::Direct { span } => RelationData::Direct {
+                Access::Direct { span: _ } => RelationData::Direct {
                     this: BTreeMap::new(),
                 },
-                Access::Union { children, span } => RelationData::Union {
+                Access::Union { children, span: _ } => RelationData::Union {
                     union: Usersets {
                         child: children.into_iter().map(|a| a.into()).collect(),
                     },
                 },
-                Access::Intersection { children, span } => RelationData::Intersection {
+                Access::Intersection { children, span: _ } => RelationData::Intersection {
                     intersection: Usersets {
                         child: children.into_iter().map(|a| a.into()).collect(),
                     },
@@ -177,12 +177,12 @@ pub mod json {
                 Access::Difference {
                     base,
                     subtract,
-                    span,
+                    span: _,
                 } => RelationData::Difference {
                     base: Box::new((*base).into()),
                     subtract: Box::new((*subtract).into()),
                 },
-                Access::SelfComputed { relation, span } => RelationData::ComputedUserset {
+                Access::SelfComputed { relation, span: _ } => RelationData::ComputedUserset {
                     computed_userset: ObjectRelation {
                         object: "".into(),
                         relation: relation.name,
@@ -191,7 +191,7 @@ pub mod json {
                 Access::Computed {
                     object,
                     relation,
-                    span,
+                    span: _,
                 } => RelationData::TupleToUserset {
                     tuple_to_userset: TupleToUserset {
                         tupleset: ObjectRelation {

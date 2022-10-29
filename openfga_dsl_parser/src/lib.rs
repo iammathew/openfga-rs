@@ -221,9 +221,6 @@ pub fn parse_model(src: &str) -> Result<Vec<Type>, ParseErrors> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse_model;
-    use openfga_common::{Access, Relation, Type};
-
     // #[test]
     // fn parses_type() {
     //     let src = concat!(
