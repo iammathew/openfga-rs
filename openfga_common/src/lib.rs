@@ -1,42 +1,59 @@
 use serde::{Deserialize, Serialize};
 
+pub type Span = std::ops::Range<usize>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Identifier {
+    pub name: String,
+    pub span: Option<Span>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Access {
-    Direct,
+    Direct {
+        span: Option<Span>,
+    },
     Computed {
-        object: String,
-        relation: String,
+        object: Identifier,
+        relation: Identifier,
+        span: Option<Span>,
     },
     SelfComputed {
-        relation: String,
+        relation: Identifier,
+        span: Option<Span>,
     },
     Union {
         children: Vec<Access>,
+        span: Option<Span>,
     },
     Intersection {
         children: Vec<Access>,
+        span: Option<Span>,
     },
     Difference {
         base: Box<Access>,
         subtract: Box<Access>,
+        span: Option<Span>,
     },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Relation {
-    pub name: String,
+    pub name: Identifier,
     pub access: Access,
+    pub span: Option<Span>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Type {
-    pub name: String,
+    pub name: Identifier,
     pub relations: Vec<Relation>,
+    pub span: Option<Span>,
 }
 
 impl Type {
     pub fn relation_exists(&self, relation_name: &str) -> bool {
-        self.relations.iter().any(|r| r.name == relation_name)
+        self.relations.iter().any(|r| r.name.name == relation_name)
     }
 }
 
@@ -47,13 +64,13 @@ pub struct AuthorizationModel {
 
 impl AuthorizationModel {
     pub fn type_exists(&self, type_name: &str) -> bool {
-        self.types.iter().any(|t| t.name == type_name)
+        self.types.iter().any(|t| t.name.name == type_name)
     }
 
     pub fn type_relation_exists(&self, type_name: &str, relation_name: &str) -> bool {
         self.types
             .iter()
-            .any(|t| t.name == type_name && t.relation_exists(relation_name))
+            .any(|t| t.name.name == type_name && t.relation_exists(relation_name))
     }
 }
 
@@ -132,10 +149,10 @@ pub mod json {
             let relations: BTreeMap<String, RelationData> = type_in
                 .relations
                 .into_iter()
-                .map(|relation| (relation.name, relation.access.into()))
+                .map(|relation| (relation.name.name, relation.access.into()))
                 .collect();
             Type {
-                type_name: type_in.name,
+                type_name: type_in.name.name,
                 relations,
             }
         }
@@ -144,38 +161,46 @@ pub mod json {
     impl From<Access> for RelationData {
         fn from(access: Access) -> Self {
             match access {
-                Access::Direct => RelationData::Direct {
+                Access::Direct { span } => RelationData::Direct {
                     this: BTreeMap::new(),
                 },
-                Access::Union { children } => RelationData::Union {
+                Access::Union { children, span } => RelationData::Union {
                     union: Usersets {
                         child: children.into_iter().map(|a| a.into()).collect(),
                     },
                 },
-                Access::Intersection { children } => RelationData::Intersection {
+                Access::Intersection { children, span } => RelationData::Intersection {
                     intersection: Usersets {
                         child: children.into_iter().map(|a| a.into()).collect(),
                     },
                 },
-                Access::Difference { base, subtract } => RelationData::Difference {
+                Access::Difference {
+                    base,
+                    subtract,
+                    span,
+                } => RelationData::Difference {
                     base: Box::new((*base).into()),
                     subtract: Box::new((*subtract).into()),
                 },
-                Access::SelfComputed { relation } => RelationData::ComputedUserset {
+                Access::SelfComputed { relation, span } => RelationData::ComputedUserset {
                     computed_userset: ObjectRelation {
                         object: "".into(),
-                        relation,
+                        relation: relation.name,
                     },
                 },
-                Access::Computed { object, relation } => RelationData::TupleToUserset {
+                Access::Computed {
+                    object,
+                    relation,
+                    span,
+                } => RelationData::TupleToUserset {
                     tuple_to_userset: TupleToUserset {
                         tupleset: ObjectRelation {
                             object: "".into(),
-                            relation: object,
+                            relation: object.name,
                         },
                         computed_userset: ObjectRelation {
                             object: "".into(),
-                            relation: relation,
+                            relation: relation.name,
                         },
                     },
                 },

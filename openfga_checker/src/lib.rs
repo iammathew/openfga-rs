@@ -1,12 +1,23 @@
 use std::collections::HashMap;
 
-use openfga_common::{Access, AuthorizationModel, Relation, Type};
+use openfga_common::{Access, AuthorizationModel, Identifier, Relation, Type};
 
 #[derive(Debug)]
 pub enum ModelError {
-    DuplicateType { name: String },
-    DuplicateRelation { name: String, type_name: String },
-    UnknownRelation { name: String, type_name: String },
+    DuplicateTypeName {
+        type1: Type,
+        type2: Type,
+    },
+    DuplicateRelationName {
+        relation1: Relation,
+        relation2: Relation,
+        target_type: Type,
+    },
+    UnknownRelation {
+        relation_name: Identifier,
+        access: Access,
+        target_type: Type,
+    },
 }
 
 fn check_access(
@@ -17,25 +28,31 @@ fn check_access(
     errors: &mut Vec<ModelError>,
 ) {
     match access {
-        Access::Difference { base, subtract } => {
+        Access::Difference {
+            base,
+            subtract,
+            span,
+        } => {
             check_access(base, relation, rtype, model, errors);
             check_access(subtract, relation, rtype, model, errors);
         }
-        Access::Intersection { children } => children
+        Access::Intersection { children, span } => children
             .iter()
             .for_each(|a| check_access(a, relation, rtype, model, errors)),
-        Access::Union { children } => children
+        Access::Union { children, span } => children
             .iter()
             .for_each(|a| check_access(a, relation, rtype, model, errors)),
         Access::SelfComputed {
             relation: relation_name,
+            span,
         } => {
             if relation_name == &relation.name {
                 todo!("Add error for self referencing access rules")
-            } else if !rtype.relation_exists(&relation_name) {
+            } else if !rtype.relation_exists(&relation_name.name) {
                 errors.push(ModelError::UnknownRelation {
-                    name: relation_name.clone(),
-                    type_name: rtype.name.clone(),
+                    relation_name: relation_name.clone(),
+                    access: access.clone(),
+                    target_type: rtype.clone(),
                 });
             }
         }
@@ -48,24 +65,26 @@ pub fn check_model(model: &AuthorizationModel) -> Result<(), Vec<ModelError>> {
     let mut type_map: HashMap<String, &Type> = HashMap::new();
     model.types.iter().for_each(|t| {
         // Check for duplicate type
-        if type_map.contains_key(&t.name) {
-            errors.push(ModelError::DuplicateType {
-                name: t.name.clone(),
+        if type_map.contains_key(&t.name.name) {
+            errors.push(ModelError::DuplicateTypeName {
+                type1: type_map.get(&t.name.name).unwrap().clone().clone(),
+                type2: t.clone(),
             })
         }
-        type_map.insert(t.name.clone(), t);
+        type_map.insert(t.name.name.clone(), t);
 
         // Check relations
         let mut relation_map: HashMap<String, &Relation> = HashMap::new();
         t.relations.iter().for_each(|r| {
             // Check for duplicate relation
-            if relation_map.contains_key(&r.name) {
-                errors.push(ModelError::DuplicateRelation {
-                    name: r.name.clone(),
-                    type_name: t.name.clone(),
+            if relation_map.contains_key(&r.name.name) {
+                errors.push(ModelError::DuplicateRelationName {
+                    relation1: relation_map.get(&r.name.name).unwrap().clone().clone(),
+                    relation2: r.clone(),
+                    target_type: t.clone(),
                 });
             }
-            relation_map.insert(r.name.clone(), r);
+            relation_map.insert(r.name.name.clone(), r);
 
             // Check access errors
             check_access(&r.access, r, t, model, &mut errors);
