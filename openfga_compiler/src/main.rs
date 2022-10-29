@@ -94,6 +94,7 @@ fn build_model_error_report(
                 .with_color(Color::Red),
         )
         .with_note("The names of type must be unique inside the model"),
+
         ModelError::DuplicateRelationName {
             relation1,
             relation2,
@@ -131,6 +132,61 @@ fn build_model_error_report(
                 .with_color(Color::Blue),
         )
         .with_note("The names of relations must be unique inside a single type"),
+
+        ModelError::UnknownRelation {
+            relation_name,
+            access: _,
+            relation,
+            target_type,
+        } => Report::build(
+            ReportKind::Error,
+            path_string.clone(),
+            target_type.span.clone().unwrap().start,
+        )
+        .with_code(203)
+        .with_message(format!(
+            "Relation definition {} on type {} references relation {}, which does not exist",
+            relation.identifier.name.clone().fg(Color::Green),
+            target_type.identifier.name.clone().fg(Color::Blue),
+            relation_name.name.clone().fg(Color::Green),
+        ))
+        .with_label(
+            Label::new((path_string.clone(), relation_name.span.unwrap().clone()))
+                .with_message(format!(
+                    "Relation {} mentioned here does not exist on type {}",
+                    relation_name.name.clone().fg(Color::Green),
+                    target_type.identifier.name.clone().fg(Color::Blue)
+                ))
+                .with_color(Color::Red),
+        )
+        .with_note("Relations actually do need to exist"),
+
+        ModelError::SelfReferencingRelation {
+            relation_name,
+            access: _,
+            relation,
+            target_type,
+        } => Report::build(
+            ReportKind::Error,
+            path_string.clone(),
+            target_type.span.clone().unwrap().start,
+        )
+        .with_code(204)
+        .with_message(format!(
+            "Relation definition {} on type {} references itself",
+            relation.identifier.name.clone().fg(Color::Green),
+            target_type.identifier.name.clone().fg(Color::Blue),
+        ))
+        .with_label(
+            Label::new((path_string.clone(), relation_name.span.unwrap().clone()))
+                .with_message(format!(
+                    "Relation {} mentions itself here",
+                    relation_name.name.clone().fg(Color::Green),
+                ))
+                .with_color(Color::Red),
+        )
+        .with_note("Relations can't reference themselves"),
+
         _ => Report::build(ReportKind::Error, path_string.clone(), 0),
     }
 }

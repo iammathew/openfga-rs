@@ -16,6 +16,13 @@ pub enum ModelError {
     UnknownRelation {
         relation_name: Identifier,
         access: Access,
+        relation: Relation,
+        target_type: Type,
+    },
+    SelfReferencingRelation {
+        relation_name: Identifier,
+        access: Access,
+        relation: Relation,
         target_type: Type,
     },
 }
@@ -43,15 +50,21 @@ fn check_access(
             .iter()
             .for_each(|a| check_access(a, relation, rtype, model, errors)),
         Access::SelfComputed {
-            relation: relation_name,
+            relation: relation_identifier,
             span: _,
         } => {
-            if relation_name == &relation.identifier {
-                todo!("Add error for self referencing access rules")
-            } else if !rtype.relation_exists(&relation_name.name) {
-                errors.push(ModelError::UnknownRelation {
-                    relation_name: relation_name.clone(),
+            if &relation_identifier.name == &relation.identifier.name {
+                errors.push(ModelError::SelfReferencingRelation {
+                    relation_name: relation_identifier.clone(),
                     access: access.clone(),
+                    relation: relation.clone(),
+                    target_type: rtype.clone(),
+                });
+            } else if !rtype.relation_exists(&relation_identifier.name) {
+                errors.push(ModelError::UnknownRelation {
+                    relation_name: relation_identifier.clone(),
+                    access: access.clone(),
+                    relation: relation.clone(),
                     target_type: rtype.clone(),
                 });
             }
