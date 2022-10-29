@@ -142,6 +142,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
 
         let and_access = difference_access
             .separated_by(just(Token::And))
+            .at_least(1)
             .map_with_span(|mut accesses, span| {
                 if accesses.len() == 1 {
                     return accesses.pop().unwrap();
@@ -155,6 +156,7 @@ pub fn better_parser() -> impl Parser<Token, Vec<Type>, Error = Simple<Token>> +
 
         let or_access = and_access
             .separated_by(just(Token::Or))
+            .at_least(1)
             .map_with_span(|mut accesses, span| {
                 if accesses.len() == 1 {
                     return accesses.pop().unwrap();
