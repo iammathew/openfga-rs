@@ -134,7 +134,7 @@ fn build_model_error_report(
         .with_note("The names of relations must be unique inside a single type"),
 
         ModelError::UnknownRelation {
-            relation_name,
+            relation_identifier: relation_name,
             access: _,
             relation,
             target_type,
@@ -162,7 +162,7 @@ fn build_model_error_report(
         .with_note("Relations actually do need to exist"),
 
         ModelError::SelfReferencingRelation {
-            relation_name,
+            relation_identifier: relation_name,
             access: _,
             relation,
             target_type,

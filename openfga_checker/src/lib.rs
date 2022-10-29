@@ -14,13 +14,13 @@ pub enum ModelError {
         target_type: Type,
     },
     UnknownRelation {
-        relation_name: Identifier,
+        relation_identifier: Identifier,
         access: Access,
         relation: Relation,
         target_type: Type,
     },
     SelfReferencingRelation {
-        relation_name: Identifier,
+        relation_identifier: Identifier,
         access: Access,
         relation: Relation,
         target_type: Type,
@@ -55,14 +55,14 @@ fn check_access(
         } => {
             if &relation_identifier.name == &relation.identifier.name {
                 errors.push(ModelError::SelfReferencingRelation {
-                    relation_name: relation_identifier.clone(),
+                    relation_identifier: relation_identifier.clone(),
                     access: access.clone(),
                     relation: relation.clone(),
                     target_type: rtype.clone(),
                 });
             } else if !rtype.relation_exists(&relation_identifier.name) {
                 errors.push(ModelError::UnknownRelation {
-                    relation_name: relation_identifier.clone(),
+                    relation_identifier: relation_identifier.clone(),
                     access: access.clone(),
                     relation: relation.clone(),
                     target_type: rtype.clone(),
