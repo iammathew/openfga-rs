@@ -17,6 +17,12 @@
     "onLanguage:openfga"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "openfga.restartLsp",
+        "title": "OpenFGA: Restart language server"
+      }
+    ],
     "languages": [
       {
         "id": "openfga",

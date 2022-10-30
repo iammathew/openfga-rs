@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { workspace, ExtensionContext } from "vscode";
+import { workspace, ExtensionContext, commands } from "vscode";
 
 import {
   Executable,
@@ -54,6 +54,12 @@ export function activate(context: ExtensionContext) {
 
   // Start the client. This will also launch the server
   client.start();
+
+  context.subscriptions.push(
+    commands.registerCommand("openfga.restartLsp", () => {
+      client.restart();
+    })
+  );
 }
 
 export function deactivate(): Thenable<void> | undefined {
