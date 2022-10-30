@@ -180,7 +180,7 @@ fn build_model_error_report(
         .with_label(
             Label::new((path_string.clone(), relation_name.span.unwrap().clone()))
                 .with_message(format!(
-                    "Relation {} mentions itself here",
+                    "Relation {} references itself here",
                     relation_name.name.clone().fg(Color::Green),
                 ))
                 .with_color(Color::Red),
