@@ -4,5 +4,6 @@ members = [
     "openfga_common",
     "openfga_dsl_parser",
     "openfga_compiler",
-    "openfga_checker"
+    "openfga_checker",
+    "openfga_lsp"
 ]
