@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
+import { platform } from "os";
 
 import { workspace, ExtensionContext, commands } from "vscode";
 
@@ -15,7 +16,8 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  const command = process.env.SERVER_PATH || "openfgalsp";
+  const command =
+    process.env[`OPENFGALSP_PATH_${platform().toUpperCase()}`] || "openfgalsp";
   const run: Executable = {
     command,
     options: {

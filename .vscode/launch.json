@@ -7,7 +7,12 @@
       "name": "Launch Client",
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-      "outFiles": ["${workspaceRoot}/openfga_vscode/out/**/*.js"]
+      "outFiles": ["${workspaceRoot}/openfga_vscode/out/**/*.js"],
+      "env": {
+        "OPENFGALSP_PATH_DARWIN": "${workspaceRoot}/target/debug/openfga_lsp",
+        "OPENFGALSP_PATH_LINUX": "${workspaceRoot}/target/debug/openfga_lsp",
+        "OPENFGALSP_PATH_WINDOWS": "${workspaceRoot}/target/debug/openfga_lsp.exe"
+      }
     }
   ]
 }
