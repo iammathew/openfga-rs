@@ -16,8 +16,8 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  const command =
-    process.env[`OPENFGALSP_PATH_${platform().toUpperCase()}`] || "openfgalsp";
+  const env = `OPENFGALSP_PATH_${platform().toUpperCase()}`;
+  const command = process.env[env] || "openfgalsp";
   const run: Executable = {
     command,
     options: {
