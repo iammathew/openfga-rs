@@ -1,7 +1,7 @@
 use std::{fmt, ops::Range};
 
 use chumsky::{prelude::*, stream::Stream};
-use openfga_common::{Access, Identifier, Relation, Type};
+use openfga_common::{Access, AuthorizationModel, Identifier, Relation, Type};
 
 pub type Span = std::ops::Range<usize>;
 pub type Spanned<T> = (T, Span);
@@ -205,7 +205,7 @@ pub enum ParseErrors {
     Parser(Vec<Simple<Token>>),
 }
 
-pub fn parse_model(src: &str) -> Result<Vec<Type>, ParseErrors> {
+pub fn parse_model(src: &str) -> Result<AuthorizationModel, ParseErrors> {
     let (tokens, errors) = lexer().parse_recovery_verbose(src.trim());
     if tokens.is_none() {
         return Err(ParseErrors::Lexer(errors));
@@ -216,7 +216,9 @@ pub fn parse_model(src: &str) -> Result<Vec<Type>, ParseErrors> {
     if types.is_none() {
         return Err(ParseErrors::Parser(errs));
     }
-    Ok(types.unwrap())
+    Ok(AuthorizationModel {
+        types: types.unwrap(),
+    })
 }
 
 #[cfg(test)]
