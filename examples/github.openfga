@@ -1,6 +1,7 @@
 type team
   relations
     define member as self
+
 type repo
   relations
     define admin as self or repo_admin from owner
@@ -9,6 +10,7 @@ type repo
     define reader as self or triager or repo_reader from owner
     define triager as self or writer
     define writer as self or maintainer or repo_writer from owner
+
 type org
   relations
     define billing_manager as self or owner
@@ -17,6 +19,7 @@ type org
     define repo_admin as self
     define repo_reader as self
     define repo_writer as self
+    
 type app
   relations
     define app_manager as self or owner from owner and (a from a or b from b)

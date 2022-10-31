@@ -422,6 +422,9 @@ dependencies = [
 name = "openfga_lsp"
 version = "0.1.0"
 dependencies = [
+ "dashmap",
+ "openfga_common",
+ "openfga_dsl_parser",
  "tokio",
  "tower-lsp",
 ]

@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dashmap = "5.4.0"
+openfga_common = { path = "../openfga_common", version = "0.1.0" }
+openfga_dsl_parser = { path = "../openfga_dsl_parser", version = "0.1.0" }
 tokio = { version = "1.21.2", features = ["full"] }
 tower-lsp = "0.17.0"
