@@ -23,10 +23,12 @@ fn main() {
     let src = fs::read_to_string(&args.input_file).expect("Failed to read file");
     let path_string = args.input_file.into_os_string().into_string().unwrap();
 
-    let (tokens, _errors) = lexer().parse_recovery_verbose(src.trim());
+    let (tokens, errors) = lexer().parse_recovery_verbose(src.trim());
     let len = src.chars().count();
+    println!("{:?} {:?}", tokens, errors);
     let (types, errs) = better_parser()
         .parse_recovery_verbose(Stream::from_iter(len..len + 1, tokens.unwrap().into_iter()));
+    println!("{:?} {:?}", types, errs);
     match types {
         Some(types) => {
             let model = AuthorizationModel { types };
