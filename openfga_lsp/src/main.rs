@@ -12,7 +12,7 @@ struct Backend {
     client: Client,
     model_map: DashMap<String, Option<AuthorizationModel>>,
     rope_map: DashMap<String, Rope>,
-    token_map: DashMap<String, Option<Vec<Token>>>,
+    token_map: DashMap<String, Option<Vec<(Token, OpsRange<usize>)>>>,
 }
 
 #[tower_lsp::async_trait]
@@ -38,6 +38,26 @@ impl LanguageServer for Backend {
                         work_done_progress: Some(false),
                     },
                 })),
+                semantic_tokens_provider: Some(
+                    SemanticTokensServerCapabilities::SemanticTokensOptions(
+                        SemanticTokensOptions {
+                            work_done_progress_options: WorkDoneProgressOptions {
+                                work_done_progress: Some(false),
+                            },
+                            legend: SemanticTokensLegend {
+                                token_types: vec![
+                                    SemanticTokenType::KEYWORD,
+                                    SemanticTokenType::OPERATOR,
+                                    SemanticTokenType::CLASS,
+                                    SemanticTokenType::METHOD,
+                                ],
+                                token_modifiers: vec![],
+                            },
+                            range: Some(false),
+                            full: Some(SemanticTokensFullOptions::Bool(true)),
+                        },
+                    ),
+                ),
                 ..Default::default()
             },
             ..Default::default()
@@ -152,15 +172,79 @@ impl LanguageServer for Backend {
         );
         Ok(Some(res))
     }
+
+    async fn semantic_tokens_full(
+        &self,
+        params: SemanticTokensParams,
+    ) -> Result<Option<SemanticTokensResult>> {
+        let tokens_ref = self
+            .token_map
+            .get(&params.text_document.uri.to_string())
+            .unwrap();
+        let tokens = tokens_ref.as_ref().unwrap();
+        let rope = self
+            .rope_map
+            .get(&params.text_document.uri.to_string())
+            .unwrap();
+
+        let mut prev_line: usize = 0;
+        let mut prev_char: usize = 0;
+
+        let res = SemanticTokensResult::Tokens(SemanticTokens {
+            result_id: None,
+            data: tokens
+                .iter()
+                .filter(|(t, _)| !(t == &Token::OpenParenthesis || t == &Token::CloseParenthesis))
+                .map(|(t, r)| {
+                    let line = rope.char_to_line(r.start);
+                    let delta_line = line - prev_line;
+                    prev_line = line;
+                    let mut delta_start = r.start - rope.line_to_char(line);
+                    let len = r.len();
+                    if delta_line == 0 {
+                        let char = delta_start;
+                        delta_start = delta_start - prev_char;
+                        prev_char = char;
+                    } else {
+                        prev_char = delta_start;
+                    }
+                    return SemanticToken {
+                        delta_line: delta_line as u32,
+                        delta_start: delta_start as u32,
+                        token_type: match t {
+                            Token::Type => 0,
+                            Token::Define => 0,
+                            Token::Relations => 0,
+                            Token::As => 0,
+                            Token::And => 1,
+                            Token::Or => 1,
+                            Token::From => 1,
+                            Token::But => 1,
+                            Token::Not => 1,
+                            Token::OpenParenthesis => 1,
+                            Token::CloseParenthesis => 1,
+                            Token::Identifier(_) => 2,
+                            Token::SelfRef => 3,
+                        },
+                        length: len as u32,
+                        ..Default::default()
+                    };
+                })
+                .collect(),
+        });
+
+        Ok(Some(res))
+    }
 }
 
 impl Backend {
     fn on_change(&self, uri: &Url, text: String) {
         self.rope_map.insert(uri.to_string(), Rope::from_str(&text));
-        let model = parse_model(&text);
-        match model {
-            Ok(m) => {
-                self.model_map.insert(uri.to_string(), Some(m));
+        let res = parse_model(&text);
+        match res {
+            Ok((model, tokens)) => {
+                self.model_map.insert(uri.to_string(), Some(model));
+                self.token_map.insert(uri.to_string(), Some(tokens));
             }
             Err(_) => {
                 if !self.model_map.contains_key(&uri.to_string()) {

@@ -205,20 +205,27 @@ pub enum ParseErrors {
     Parser(Vec<Simple<Token>>),
 }
 
-pub fn parse_model(src: &str) -> Result<AuthorizationModel, ParseErrors> {
+pub fn parse_model(
+    src: &str,
+) -> Result<(AuthorizationModel, Vec<(Token, Range<usize>)>), ParseErrors> {
     let (tokens, errors) = lexer().parse_recovery_verbose(src.trim());
     if tokens.is_none() {
         return Err(ParseErrors::Lexer(errors));
     }
     let len = src.chars().count();
-    let (types, errs) = better_parser()
-        .parse_recovery_verbose(Stream::from_iter(len..len + 1, tokens.unwrap().into_iter()));
+    let (types, errs) = better_parser().parse_recovery_verbose(Stream::from_iter(
+        len..len + 1,
+        tokens.clone().unwrap().into_iter(),
+    ));
     if types.is_none() {
         return Err(ParseErrors::Parser(errs));
     }
-    Ok(AuthorizationModel {
-        types: types.unwrap(),
-    })
+    Ok((
+        AuthorizationModel {
+            types: types.unwrap(),
+        },
+        tokens.unwrap(),
+    ))
 }
 
 #[cfg(test)]
