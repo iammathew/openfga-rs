@@ -2,6 +2,7 @@ use dashmap::DashMap;
 use openfga_common::AuthorizationModel;
 use openfga_dsl_parser::{parse_model, Token};
 use ropey::Rope;
+use std::env;
 use std::ops::Range as OpsRange;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -38,8 +39,13 @@ impl LanguageServer for Backend {
                         work_done_progress: Some(false),
                     },
                 })),
-                semantic_tokens_provider: Some(
-                    SemanticTokensServerCapabilities::SemanticTokensOptions(
+                semantic_tokens_provider: if env::var("OPENFGA_DISABLE_SEMANTIC_TOKEN")
+                    .unwrap_or("false".into())
+                    == "true"
+                {
+                    None
+                } else {
+                    Some(SemanticTokensServerCapabilities::SemanticTokensOptions(
                         SemanticTokensOptions {
                             work_done_progress_options: WorkDoneProgressOptions {
                                 work_done_progress: Some(false),
@@ -56,8 +62,8 @@ impl LanguageServer for Backend {
                             range: Some(false),
                             full: Some(SemanticTokensFullOptions::Bool(true)),
                         },
-                    ),
-                ),
+                    ))
+                },
                 ..Default::default()
             },
             ..Default::default()
@@ -126,8 +132,7 @@ impl LanguageServer for Backend {
             .model_map
             .get(&params.text_document.uri.to_string())
             .unwrap();
-        let model = model_ref.as_ref();
-        let model = match model {
+        let model = match model_ref.as_ref() {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -181,7 +186,10 @@ impl LanguageServer for Backend {
             .token_map
             .get(&params.text_document.uri.to_string())
             .unwrap();
-        let tokens = tokens_ref.as_ref().unwrap();
+        let tokens = match tokens_ref.as_ref() {
+            Some(t) => t,
+            None => return Ok(None),
+        };
         let rope = self
             .rope_map
             .get(&params.text_document.uri.to_string())
@@ -249,6 +257,7 @@ impl Backend {
             Err(_) => {
                 if !self.model_map.contains_key(&uri.to_string()) {
                     self.model_map.insert(uri.to_string(), None);
+                    self.token_map.insert(uri.to_string(), None);
                 };
             }
         };

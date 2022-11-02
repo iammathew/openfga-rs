@@ -11,7 +11,8 @@
       "env": {
         "OPENFGALSP_PATH_DARWIN": "${workspaceRoot}/target/debug/openfga_lsp",
         "OPENFGALSP_PATH_LINUX": "${workspaceRoot}/target/debug/openfga_lsp",
-        "OPENFGALSP_PATH_WINDOWS": "${workspaceRoot}/target/debug/openfga_lsp.exe"
+        "OPENFGALSP_PATH_WINDOWS": "${workspaceRoot}/target/debug/openfga_lsp.exe",
+        "OPENFGA_DISABLE_SEMANTIC_TOKEN": "true"
       }
     }
   ]
