@@ -1,0 +1,28 @@
+{
+  "scopeName": "source.openfga",
+  "patterns": [
+    { "include": "#keyword" },
+    { "include": "#operator" },
+    { "include": "#constant" },
+    { "include": "#commentLine" },
+    { "include": "#parenthesis" }
+  ],
+  "repository": {
+    "keyword": {
+      "match": "\\b(type|define|relations|as)\\b",
+      "name": "keyword.other.openfga"
+    },
+    "operator": {
+      "match": "\\b(and|or|from)\\b",
+      "name": "keyword.operator.openfga"
+    },
+    "commentLine": {
+      "match": "//.*",
+      "name": "comment.line.double-slash"
+    },
+    "constant": {
+      "match": "\\b(self)\\b",
+      "name": "variable.self.openfga"
+    }
+  }
+}
