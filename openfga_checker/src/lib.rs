@@ -1,30 +1,86 @@
-use std::collections::HashMap;
-
 use openfga_common::{Access, AuthorizationModel, Identifier, Relation, Type};
+use std::{collections::HashMap, ops::Range};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ModelError {
-    DuplicateTypeName {
-        type1: Type,
-        type2: Type,
-    },
+    #[error("Type with name {} was defined twice", type1.identifier.name)]
+    DuplicateTypeName { type1: Type, type2: Type },
+    #[error("Relation {} got defined twice on type {}",
+    relation1.identifier.name,
+    target_type.identifier.name)]
     DuplicateRelationName {
         relation1: Relation,
         relation2: Relation,
         target_type: Type,
     },
+    #[error("Relation definition {} on type {} references relation {}, which does not exist",
+    relation.identifier.name,
+    target_type.identifier.name,
+    relation_identifier.name)]
     UnknownRelation {
         relation_identifier: Identifier,
         access: Access,
         relation: Relation,
         target_type: Type,
     },
+    #[error("Relation definition {} on type {} references itself",
+    relation.identifier.name,
+    target_type.identifier.name)]
     SelfReferencingRelation {
         relation_identifier: Identifier,
         access: Access,
         relation: Relation,
         target_type: Type,
     },
+}
+
+impl ModelError {
+    pub fn get_code(&self) -> u64 {
+        match self {
+            Self::DuplicateTypeName { type1: _, type2: _ } => 201,
+            Self::DuplicateRelationName {
+                relation1: _,
+                relation2: _,
+                target_type: _,
+            } => 202,
+            Self::UnknownRelation {
+                relation_identifier: _,
+                access: _,
+                relation: _,
+                target_type: _,
+            } => 203,
+            Self::SelfReferencingRelation {
+                relation_identifier: _,
+                access: _,
+                relation: _,
+                target_type: _,
+            } => 204,
+        }
+    }
+
+    pub fn get_span(&self) -> Range<usize> {
+        match self {
+            Self::DuplicateTypeName { type1: _, type2 } => type2.span.clone().unwrap(),
+            Self::DuplicateRelationName {
+                relation1: _,
+                relation2,
+                target_type: _,
+            } => relation2.span.clone().unwrap(),
+            Self::UnknownRelation {
+                relation_identifier,
+                access: _,
+                relation: _,
+                target_type: _,
+            } => relation_identifier.span.clone().unwrap(),
+            Self::SelfReferencingRelation {
+                relation_identifier,
+                access: _,
+                relation: _,
+                target_type: _,
+            } => relation_identifier.span.clone().unwrap(),
+        }
+    }
 }
 
 fn check_access(

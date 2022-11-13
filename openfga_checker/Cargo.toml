@@ -9,3 +9,4 @@ license = "Apache-2.0"
 
 [dependencies]
 openfga_common = { path = "../openfga_common", version = "0.1.0" }
+thiserror = "1.0.37"

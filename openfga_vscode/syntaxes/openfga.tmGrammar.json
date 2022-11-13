@@ -4,8 +4,7 @@
     { "include": "#keyword" },
     { "include": "#operator" },
     { "include": "#constant" },
-    { "include": "#commentLine" },
-    { "include": "#parenthesis" }
+    { "include": "#commentLine" }
   ],
   "repository": {
     "keyword": {

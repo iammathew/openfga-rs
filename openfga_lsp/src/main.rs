@@ -1,8 +1,10 @@
 use dashmap::DashMap;
+use openfga_checker::{check_model, ModelError};
 use openfga_common::AuthorizationModel;
 use openfga_dsl_parser::{parse_model, Token};
 use ropey::Rope;
 use std::env;
+use std::fmt::format;
 use std::ops::Range as OpsRange;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -11,8 +13,9 @@ use tower_lsp::{Client, LanguageServer, LspService, Server};
 #[derive(Debug)]
 struct Backend {
     client: Client,
+    diagnostics_map: DashMap<String, Option<Vec<ModelError>>>,
     model_map: DashMap<String, Option<AuthorizationModel>>,
-    rope_map: DashMap<String, Rope>,
+    rope_map: DashMap<String, Option<Rope>>,
     token_map: DashMap<String, Option<Vec<(Token, OpsRange<usize>)>>>,
 }
 
@@ -98,7 +101,8 @@ impl LanguageServer for Backend {
         self.client
             .log_message(MessageType::INFO, "File opened!")
             .await;
-        self.on_change(&params.text_document.uri, params.text_document.text);
+        self.on_change(&params.text_document.uri, params.text_document.text)
+            .await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
@@ -109,13 +113,15 @@ impl LanguageServer for Backend {
             &params.text_document.uri,
             params.content_changes[0].text.clone(),
         )
+        .await
     }
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         self.client
             .log_message(MessageType::INFO, "File saved, reparsing model!")
             .await;
-        self.on_change(&params.text_document.uri, params.text.unwrap());
+        self.on_change(&params.text_document.uri, params.text.unwrap())
+            .await;
     }
 
     async fn did_close(&self, _: DidCloseTextDocumentParams) {
@@ -190,10 +196,12 @@ impl LanguageServer for Backend {
             Some(t) => t,
             None => return Ok(None),
         };
-        let rope = self
+
+        let rope_ref = self
             .rope_map
             .get(&params.text_document.uri.to_string())
             .unwrap();
+        let rope = rope_ref.as_ref().unwrap();
 
         let mut prev_line: usize = 0;
         let mut prev_char: usize = 0;
@@ -246,20 +254,61 @@ impl LanguageServer for Backend {
 }
 
 impl Backend {
-    fn on_change(&self, uri: &Url, text: String) {
-        self.rope_map.insert(uri.to_string(), Rope::from_str(&text));
+    async fn on_change(&self, uri: &Url, text: String) {
         let res = parse_model(&text);
         match res {
             Ok((model, tokens)) => {
+                let check = check_model(&model);
+                match check {
+                    Ok(_) => {
+                        self.diagnostics_map.insert(uri.to_string(), None);
+                    }
+                    Err(errors) => {
+                        self.diagnostics_map.insert(uri.to_string(), Some(errors));
+                    }
+                };
+                self.rope_map
+                    .insert(uri.to_string(), Some(Rope::from_str(&text)));
                 self.model_map.insert(uri.to_string(), Some(model));
                 self.token_map.insert(uri.to_string(), Some(tokens));
+                self.publish_diagnostics(uri).await;
             }
             Err(_) => {
                 if !self.model_map.contains_key(&uri.to_string()) {
+                    self.rope_map.insert(uri.to_string(), None);
                     self.model_map.insert(uri.to_string(), None);
                     self.token_map.insert(uri.to_string(), None);
                 };
             }
+        };
+    }
+
+    async fn publish_diagnostics(&self, uri: &Url) {
+        let diagnostics = self
+            .diagnostics_map
+            .get(&uri.to_string())
+            .unwrap()
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .map(|e| self.map_model_error_to_diagnostic(uri, e))
+            .collect();
+        self.client
+            .publish_diagnostics(uri.clone(), diagnostics, None)
+            .await;
+    }
+
+    fn map_model_error_to_diagnostic(&self, uri: &Url, error: &ModelError) -> Diagnostic {
+        return Diagnostic {
+            range: self.span_to_range(&uri, error.get_span()),
+            severity: Some(DiagnosticSeverity::ERROR),
+            code: Some(NumberOrString::Number(error.get_code() as i32)),
+            code_description: None,
+            source: Some(String::from("openfga")),
+            message: format!("{}", error),
+            related_information: None,
+            tags: None,
+            data: None,
         };
     }
 
@@ -271,7 +320,8 @@ impl Backend {
     }
 
     fn char_to_position(&self, uri: &Url, char: usize) -> Position {
-        let rope = self.rope_map.get(&uri.to_string()).unwrap();
+        let rope_ref = self.rope_map.get(&uri.to_string()).unwrap();
+        let rope = rope_ref.as_ref().unwrap();
         let line = rope.char_to_line(char);
         let start = rope.line_to_char(line);
         Position {
@@ -288,6 +338,7 @@ async fn main() {
 
     let (service, socket) = LspService::new(|client| Backend {
         client,
+        diagnostics_map: DashMap::new(),
         model_map: DashMap::new(),
         token_map: DashMap::new(),
         rope_map: DashMap::new(),
