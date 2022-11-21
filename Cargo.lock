@@ -385,7 +385,7 @@ checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "openfga_checker"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "openfga_common",
  "thiserror",
@@ -393,14 +393,14 @@ dependencies = [
 
 [[package]]
 name = "openfga_common"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "openfga_compiler"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -413,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "openfga_lsp"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dashmap",
  "openfga_checker",
@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "openfga_model_dsl_parser"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chumsky",
  "openfga_common",

@@ -1,8 +1,8 @@
 {
-  "openfga_common": "0.1.0",
-  "openfga_model_dsl_parser": "0.1.0",
-  "openfga_compiler": "0.1.0",
-  "openfga_checker": "0.1.0",
-  "openfga_lsp": "0.1.0",
-  "openfga_vscode": "0.1.0"
+  "openfga_common": "0.2.0",
+  "openfga_model_dsl_parser": "0.1.1",
+  "openfga_compiler": "0.2.0",
+  "openfga_checker": "0.2.0",
+  "openfga_lsp": "0.2.0",
+  "openfga_vscode": "0.2.0"
 }
