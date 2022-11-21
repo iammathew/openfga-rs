@@ -9,7 +9,7 @@ edition = "2021"
 dashmap = "5.4.0"
 openfga_checker = { path = "../openfga_checker", version = "0.1.0" }
 openfga_common = { path = "../openfga_common", version = "0.1.0" }
-openfga_dsl_parser = { path = "../openfga_dsl_parser", version = "0.1.0" }
+openfga_model_dsl_parser = { path = "../openfga_model_dsl_parser", version = "0.1.0" }
 ropey = "1.5.0"
 tokio = { version = "1.21.2", features = ["full"] }
 tower-lsp = "0.17.0"

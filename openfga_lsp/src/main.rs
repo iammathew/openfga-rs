@@ -1,10 +1,9 @@
 use dashmap::DashMap;
 use openfga_checker::{check_model, ModelError};
 use openfga_common::AuthorizationModel;
-use openfga_dsl_parser::{parse_model, Token};
+use openfga_model_dsl_parser::{parse_model, Token};
 use ropey::Rope;
 use std::env;
-use std::fmt::format;
 use std::ops::Range as OpsRange;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -107,7 +106,10 @@ impl LanguageServer for Backend {
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         self.client
-            .log_message(MessageType::INFO, "File changed, reparsing model!")
+            .log_message(
+                MessageType::INFO,
+                "File changed, parsing and checking model again!",
+            )
             .await;
         self.on_change(
             &params.text_document.uri,
@@ -118,7 +120,10 @@ impl LanguageServer for Backend {
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         self.client
-            .log_message(MessageType::INFO, "File saved, reparsing model!")
+            .log_message(
+                MessageType::INFO,
+                "File saved, parsing and checking model again!",
+            )
             .await;
         self.on_change(&params.text_document.uri, params.text.unwrap())
             .await;

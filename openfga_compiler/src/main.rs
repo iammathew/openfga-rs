@@ -4,7 +4,7 @@ use clap::Parser as CliParser;
 use openfga_checker::{check_model, ModelError};
 use openfga_common::json::AuthorizationModel as JsonAuthModel;
 use openfga_common::AuthorizationModel;
-use openfga_dsl_parser::{better_parser, lexer, Token};
+use openfga_model_dsl_parser::{better_parser, lexer, Token};
 use std::{fs, path::PathBuf};
 
 #[derive(CliParser, Debug)]

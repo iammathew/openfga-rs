@@ -1,5 +1,5 @@
 [package]
-name = "openfga_dsl_parser"
+name = "openfga_model_dsl_parser"
 version = "0.1.0"
 edition = "2021"
 description = "OpenFGA DSL parser, contains code to parse a model definition"

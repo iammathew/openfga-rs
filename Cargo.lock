@@ -407,16 +407,8 @@ dependencies = [
  "clap",
  "openfga_checker",
  "openfga_common",
- "openfga_dsl_parser",
+ "openfga_model_dsl_parser",
  "serde_json",
-]
-
-[[package]]
-name = "openfga_dsl_parser"
-version = "0.1.0"
-dependencies = [
- "chumsky",
- "openfga_common",
 ]
 
 [[package]]
@@ -426,10 +418,18 @@ dependencies = [
  "dashmap",
  "openfga_checker",
  "openfga_common",
- "openfga_dsl_parser",
+ "openfga_model_dsl_parser",
  "ropey",
  "tokio",
  "tower-lsp",
+]
+
+[[package]]
+name = "openfga_model_dsl_parser"
+version = "0.1.0"
+dependencies = [
+ "chumsky",
+ "openfga_common",
 ]
 
 [[package]]
