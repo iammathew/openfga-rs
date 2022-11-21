@@ -1,6 +1,6 @@
 [package]
 name = "openfga_compiler"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "OpenFGA model compiler, contains cli interface"
 license = "Apache-2.0"
@@ -11,9 +11,9 @@ default-run = "openfgac"
 [dependencies]
 ariadne = "0.1.5"
 chumsky = "0.8.0"
-openfga_common = { path = "../openfga_common", version = "0.1.0" }
-openfga_model_dsl_parser = { path = "../openfga_model_dsl_parser", version = "0.1.0" }
-openfga_checker = { path = "../openfga_checker", version = "0.1.0" }
+openfga_common = { path = "../openfga_common", version = "0.2.0" }
+openfga_model_dsl_parser = { path = "../openfga_model_dsl_parser", version = "0.1.1" }
+openfga_checker = { path = "../openfga_checker", version = "0.2.0" }
 serde_json = "1.0.86"
 clap = { version = "4.0.18", features = ["derive"] }
 
