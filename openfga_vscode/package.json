@@ -1,5 +1,5 @@
 {
-  "name": "openfga-vscode-client",
+  "name": "openfga_vscode",
   "description": "OpenFGA VSCode extension",
   "author": "iammathew",
   "license": "Apache-2.0",
